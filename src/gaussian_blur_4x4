@@ -1,0 +1,52 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Read the image
+image_path = '/Users/dominiquebuob/Documents/Projects/Embroider-Image-Transformation/data/Husky-Golden-Red.png'
+image = cv2.imread(image_path)
+gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# Set up the figure with an appropriate size
+plt.figure(figsize=(10, 10))  # Overall figure size
+
+# Define parameter ranges for demonstration
+gaussian_blur_kernels = [(3, 3), (5, 5), (7, 7), (9, 9)]
+canny_thresholds = [(50, 100), (100, 150), (150, 200), (200, 250)]
+
+# Counter for subplot indexing
+counter = 1
+
+# Image resize dimensions
+resize_dim = (100, 100)  # New dimensions for the images
+
+# Loop through combinations of parameters
+for blur_kernel in gaussian_blur_kernels:
+    for low, high in canny_thresholds:
+        # Apply Gaussian Blur
+        blurred_image = cv2.GaussianBlur(gray_image, blur_kernel, 0)
+
+        # Find contours using Canny edge detector with varying thresholds
+        edges = cv2.Canny(blurred_image, threshold1=low, threshold2=high)
+
+        # Find contours from the edges
+        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Draw the contours on a blank image
+        contour_image = np.zeros_like(image)
+        cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 3)
+
+        # Convert contour image to RGB and resize
+        contour_image_rgb = cv2.cvtColor(contour_image, cv2.COLOR_BGR2RGB)
+        contour_image_resized = cv2.resize(contour_image_rgb, resize_dim, interpolation=cv2.INTER_AREA)
+
+        # Display the resized contour-detected images with varying parameters
+        plt.subplot(4, 4, counter)
+        plt.imshow(contour_image_resized)
+        plt.title(f'Blur: {blur_kernel}, Canny: ({low}, {high})', fontsize=8)
+        plt.axis('off')
+
+        counter += 1
+
+plt.tight_layout()
+plt.show()
